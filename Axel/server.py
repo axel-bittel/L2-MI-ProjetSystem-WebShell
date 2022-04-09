@@ -74,4 +74,4 @@ def	create_server(HOST, PORT, traitement) :
 	sock.close()
 	
 if __name__ == "__main__" :
-	create_server("127.0.0.1", 4242, "traitment3")
+	create_server("127.0.0.1", 4243, "traitment5")

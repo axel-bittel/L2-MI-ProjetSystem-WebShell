@@ -26,9 +26,9 @@ def	main() :
 		os.write(2, b"request not supported\n")
 	else :
 		inter = msg.decode('utf8')
-		msg = res.replace("$(RES)", msg.decode('utf8'))
+		msg = res.replace("$(RES)", msg.decode('utf8').replace("\n", "<br>"))
 		os.write(2, bytes(msg, 'utf8'))
-		print(msg, file = sys.stdout)
+		os.write(1, bytes(msg, 'utf8'))
 	exit (0)
 if __name__ == "__main__" :
 	main()

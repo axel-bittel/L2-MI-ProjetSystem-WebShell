@@ -14,7 +14,7 @@ Content-Length: 1000
     <title>Hello, world!</title>
 </head>
 <body>
-	$(RES)<br>
+	$(HISTORY)<br>
 	$(DATA)<br>
 	<form action="ajoute" method="get">
 		<input type="text" name="saisie" placeholder="Tapez quelque chose" />
@@ -36,18 +36,30 @@ def escaped_latin1_to_utf8(s):
 	return res
 
 def	main() :
+	fd = os.open("/tmp/historique.txt", os.O_CREAT | os.O_APPEND | os.O_RDWR)
 	msg = os.read(0, 100000)
 	if (msg.decode('utf8').split("\r")[0].split(' ')[0] != "GET" or msg.decode('utf8').split('\r')[0].split(' ')[2] != 'HTTP/1.1') :
 		os.write(2, b"request not supported\n")
 	else :
-		inter = msg.decode('utf8')
+		read = os.read(fd, 100000)
+		history =  ''
+		while (len(read) > 0) :
+			history += read.decode('utf8')
+			read = os.read(fd, 100000)
+		#EXTRACT DATA
 		data = ''
 		if (len(msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")) > 1) :
 			data = msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")[1].split("&")[0].split("=")[1].replace('+', ' ')
-		msg = res.replace("$(RES)", msg.decode('utf8').replace("\n", "<br>"))
-		msg = msg.replace("$(DATA)", escaped_latin1_to_utf8(data))
-		os.write(2, bytes(msg, 'utf8'))
+			data = escaped_latin1_to_utf8(data)
+		#CREATE RETURN PAQUET
+		msg = res.replace("$(DATA)", data)
+		msg = msg.replace("$(HISTORY)", history.replace("\n", "<br>"))
 		os.write(1, bytes(msg, 'utf8'))
+		#WRITE IN HISTORY
+		if (len(data) > 0) :
+			os.write(fd, bytes(data,'utf8'))
+			os.write(fd, bytes('\n', 'utf8'))
+		os.close(fd)
 	exit (0)
 if __name__ == "__main__" :
 	main()
