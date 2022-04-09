@@ -3,22 +3,11 @@ import os, select, socket, sys, signal
 import json, time
 
 MAX_SIZE_MSG  = 4096
-test = b"""HTTP/1.1 200 
-Content-Type: text/html; charset=utf-8
-Connection: close
-Content-Length: 125
-
-<!DOCTYPE html>
-<head>
-    <title>Hello, world!</title>
-</head>
-<body>
-bite
-</body>
-</html>"""
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 childs = []
 
 def sig_int(sig_num, frame) :
+	sock.close()
 	for c in childs :
 			os.kill(c, signal.SIGSTOP)
 	try :
@@ -32,10 +21,9 @@ def	create_server(HOST, PORT, traitement) :
 	nb_client = 0
 	close = False
 	signal.signal(signal.SIGINT, sig_int)
-	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	while (1) :
 		try :
-			sock.bind((HOST, PORT))
+			sock.bind((HOST, int(PORT)))
 			break
 		except :
 			print("error Create socket\nWaiting can connect...")
@@ -74,4 +62,16 @@ def	create_server(HOST, PORT, traitement) :
 	sock.close()
 	
 if __name__ == "__main__" :
-	create_server("127.0.0.1", 4243, "traitment5")
+	if (len(sys.argv) == 3) :
+		ip = "127.0.0.1"
+		port = sys.argv[2]
+		file = sys.argv[1]
+		if (not(port.isnumeric())) :
+			os.write (2, bytes("PORT IS NOT A NUMBER\n", "utf8"))
+			exit (1)
+		if (not(os.path.exists(bytes(file + ".py", "utf8")))) :
+			os.write (2, bytes("FILE NOT EXIST\n", "utf8"))
+			exit (1)
+		create_server(ip, port, file)
+	else :
+		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))
