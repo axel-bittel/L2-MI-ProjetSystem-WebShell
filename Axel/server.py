@@ -62,7 +62,7 @@ def	create_server(HOST, PORT, traitement) :
 	sock.close()
 	
 if __name__ == "__main__" :
-	if (len(sys.argv) == 3) :
+	"""if (len(sys.argv) == 3) :
 		ip = "127.0.0.1"
 		port = sys.argv[2]
 		file = sys.argv[1]
@@ -74,4 +74,5 @@ if __name__ == "__main__" :
 			exit (1)
 		create_server(ip, port, file)
 	else :
-		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))
+		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))"""
+	create_server("127.0.0.1", 4244, "webshell2")
