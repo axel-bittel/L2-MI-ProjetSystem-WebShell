@@ -65,24 +65,30 @@ def	get_cmd() :
 		msg = res.replace("$(DATA)", data)
 		if (len(id_session) == 0) :
 			id_session = str(os.getpid())
+			pid = os.fork()
 			#CREATE PROCESS SHELL
-			if (os.fork() == 0) :
+			if (pid == 0) :
 				#os.setsid()
 				#PIPES
 				os.mkfifo("/tmp/shell_vers_traitement" + (id_session))
 				os.mkfifo("/tmp/traitement_vers_shell" + (id_session))	
+				os.close (0)
+				os.close (1)
 				#READ CMD IN TRAITEMENT_VERS_SHELL
 				#data_cmd = read_file(fd_read)
-				#os.execvp('sh', ['sh', '-c', 'sh /tmp/traitement_vers_shell' + (id_session) + ' 11< /tmp/traitement_vers_shell' + (id_session) + ' &> /tmp/shell_vers_traitement' + (id_session) + ' 12>/tmp/traitement_vers_shell' + (id_session) + ' 13< /tmp/shell_vers_traitement' + (id_session)])
 				os.write(2, bytes('sh /tmp/traitement_vers_shell' + (id_session) + ' 3<> /tmp/traitement_vers_shell' + (id_session) + ' &> /tmp/shell_vers_traitement' + (id_session) + ' 4< /tmp/shell_vers_traitement' + (id_session), 'utf8'))
-				os.execvp('sh', ['sh', '-c', 'sh /tmp/traitement_vers_shell' + (id_session) + ' 3<> /tmp/traitement_vers_shell' + (id_session) + ' &> /tmp/shell_vers_traitement' + (id_session) + ' 4< /tmp/shell_vers_traitement' + (id_session)])
+				os.execvp('sh', ['sh', '-c', 'sh /tmp/traitement_vers_shell' + (id_session) + ' 3< /tmp/traitement_vers_shell' + (id_session) + ' &> /tmp/shell_vers_traitement' + (id_session) + ' 4>/tmp/traitement_vers_shell' + (id_session) + ' 5< /tmp/shell_vers_traitement' + (id_session)])
+				#os.execvp('sh', ['sh', '-c', 'sh /tmp/traitement_vers_shell' + (id_session) + ' 3<> /tmp/traitement_vers_shell' + (id_session) + ' &> /tmp/shell_vers_traitement' + (id_session) + ' 4< /tmp/shell_vers_traitement' + (id_session)])
+				exit (0)
+			elif (pid == -1) :
+				exit (0)
 		msg = msg.replace("$(ID_SESSION)", id_session)
 		#OPEN FILES HISTORY AND PIPE
 		files_created = 0
 		fd_fifo_in = -1
 		fd_fifo_out = -1
 		fd = os.open("/tmp/historique" + str(id_session) + ".txt", os.O_CREAT | os.O_APPEND | os.O_RDWR)
-		while (not(files_created) and len(id_session) > 0) :
+		while (not(files_created) and len(data) > 0) :
 			try : 
 				fd_fifo_out = os.open("/tmp/traitement_vers_shell" + str(id_session), os.O_WRONLY)
 				fd_fifo_in = os.open("/tmp/shell_vers_traitement" + str(id_session), os.O_RDONLY)
@@ -103,9 +109,9 @@ def	get_cmd() :
 		if (len(data) > 0) :
 			shell_res = read_file(fd_fifo_in)
 			os.write(1, bytes(shell_res, 'utf8'))
-		os.close (fd_fifo_in)
-		os.close (fd_fifo_out)
+			os.close (fd_fifo_in)
+			os.close (fd_fifo_out)
 		return (data, history)
 if __name__ == "__main__" :
 	get_cmd()
-	sys.exit (-1)
+	sys.exit (0)

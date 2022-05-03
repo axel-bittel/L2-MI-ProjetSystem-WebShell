@@ -5,17 +5,23 @@ import json, time
 MAX_SIZE_MSG  = 4096
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 childs = []
+socketlst = []
 
 def sig_int(sig_num, frame) :
 	sock.close()
+	for i in socketlst :
+		i.close()
 	for c in childs :
+		try :
 			os.kill(c, signal.SIGSTOP)
+		except : 
+			continue
 	try :
 		while (os.waitpid(-1, 0)) : 
 			continue
 	except : 
 		print ("Kill all process")
-	exit (1)
+	exit (0)
 
 def	create_server(HOST, PORT, traitement) :
 	nb_client = 0
@@ -77,4 +83,4 @@ if __name__ == "__main__" :
 		create_server(ip, port, file)
 	else :
 		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))"""
-	create_server("127.0.0.1", 4249, "Axel/webshell2")
+	create_server("127.0.0.1", 4242, "Axel/webshell1")
