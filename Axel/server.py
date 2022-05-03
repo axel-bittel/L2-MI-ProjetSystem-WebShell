@@ -15,7 +15,7 @@ def sig_int(sig_num, frame) :
 			continue
 	except : 
 		print ("Kill all process")
-	exit (128 + sig_num)
+	exit (1)
 
 def	create_server(HOST, PORT, traitement) :
 	nb_client = 0
@@ -37,8 +37,9 @@ def	create_server(HOST, PORT, traitement) :
 			if (s == sock) :
 				if (nb_client < 4) :
 					(new_sock, (host, port)) = sock.accept()
-					socketlst.append(new_sock)
-					nb_client = nb_client + 1
+					if (host == "127.0.0.1") :
+						socketlst.append(new_sock)
+						nb_client = nb_client + 1
 				else :
 					os.waitpid(-1, 0)
 					nb_client -= 1
@@ -55,6 +56,7 @@ def	create_server(HOST, PORT, traitement) :
 					os.dup2(res, 0)
 					os.dup2(res, 1)
 					os.execvp("python3", ["python3", traitement + ".py"])
+					print ("bite")
 				else :
 					childs.append(pid)
 					socketlst.remove(s)
@@ -75,4 +77,4 @@ if __name__ == "__main__" :
 		create_server(ip, port, file)
 	else :
 		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))"""
-	create_server("127.0.0.1", 4244, "webshell2")
+	create_server("127.0.0.1", 4249, "Axel/webshell2")
