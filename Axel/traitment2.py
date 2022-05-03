@@ -20,7 +20,6 @@ $(RES)
 """ 
 
 def	main() :
-	#fd = os.open("test.txt", os.O_CREAT | os.O_WRONLY)
 	msg = os.read(0, 100000)
 	if (msg.decode('utf8').split("\r")[0].split(' ')[0] != "GET" or msg.decode('utf8').split('\r')[0].split(' ')[2] != 'HTTP/1.1') :
 		os.write(2, b"request not supported\n")

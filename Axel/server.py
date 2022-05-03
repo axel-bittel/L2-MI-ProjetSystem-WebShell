@@ -6,14 +6,21 @@ MAX_SIZE_MSG  = 4096
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 childs = []
 socketlst = []
+socketClose = []
 
 def sig_int(sig_num, frame) :
 	sock.close()
 	for i in socketlst :
+		i.shutdown(socket.SHUT_RDWR)
 		i.close()
+	for i in socketClose:
+		try :
+			i.shutdown(socket.SHUT_RDWR)
+			i.close()
+		except : continue
 	for c in childs :
 		try :
-			os.kill(c, signal.SIGSTOP)
+			os.kill(c, signal.SIGKILL)
 		except : 
 			continue
 	try :
@@ -52,8 +59,8 @@ def	create_server(HOST, PORT, traitement) :
 			elif (s == sys.stdin) :
 				msg = sys.stdin.readline()
 				if (msg == "exit\n") : 
-					s.close()
 					close = True
+					sig_int(0, 0)
 					break
 			else :
 				pid = os.fork()
@@ -61,16 +68,17 @@ def	create_server(HOST, PORT, traitement) :
 					res = s.fileno()
 					os.dup2(res, 0)
 					os.dup2(res, 1)
+					os.dup2(res, 2)
 					os.execvp("python3", ["python3", traitement + ".py"])
-					print ("bite")
 				else :
 					childs.append(pid)
 					socketlst.remove(s)
+					socketClose.append(s)
 					s.close()
 	sock.close()
 	
 if __name__ == "__main__" :
-	"""if (len(sys.argv) == 3) :
+	"""if (len(sys.argv) >= 2) :
 		ip = "127.0.0.1"
 		port = sys.argv[2]
 		file = sys.argv[1]
@@ -78,9 +86,9 @@ if __name__ == "__main__" :
 			os.write (2, bytes("PORT IS NOT A NUMBER\n", "utf8"))
 			exit (1)
 		if (not(os.path.exists(bytes(file + ".py", "utf8")))) :
-			os.write (2, bytes("FILE NOT EXIST\n", "utf8"))
+			os.write (2, bytes(file + " NOT EXIST\n", "utf8"))
 			exit (1)
 		create_server(ip, port, file)
 	else :
 		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))"""
-	create_server("127.0.0.1", 4242, "Axel/webshell1")
+	create_server("127.0.0.1", 4202, "Axel/webshell2")

@@ -13,7 +13,7 @@ Content-Length: 1000
 <head>
     <title>Hello, world!</title>
 </head>
-<body>
+<body style="background-color:black;color:#46C786">
 	$(HISTORY)<br>
 	$(DATA)<br>
 	<form action="ajoute$(ID_SESSION)" method="get">
@@ -72,4 +72,4 @@ def	get_cmd() :
 	exit (0)
 if __name__ == "__main__" :
 	data, history = get_cmd()
-	os.execvp('sh', ['sh','-c', data])
+	os.execvp('sh', ['sh','-c', data] )

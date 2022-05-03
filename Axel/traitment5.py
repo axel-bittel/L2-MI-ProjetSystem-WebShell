@@ -55,7 +55,7 @@ def	main() :
 			id_session = str(os.getpid())
 		msg = msg.replace("$(ID_SESSION)", id_session)
 		#Extract HISTORY
-		fd = os.open("/tmp/historique" + str(id_session) + ".txt", os.O_CREAT | os.O_APPEND | os.O_RDWR)
+		fd = os.open("/tmp/historique" + id_session + ".txt", os.O_CREAT | os.O_APPEND | os.O_RDWR)
 		read = os.read(fd, 100000)
 		history =  ''
 		while (len(read) > 0) :
