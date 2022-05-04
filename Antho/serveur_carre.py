@@ -6,6 +6,7 @@ fils = []
 def create_server(HOST, PORT, traitant) :
 
     signal.signal(signal.SIGINT, handler)
+    signal.signal(signal.SIGCHLD, signal.SIG_IGN) #TO AVOID DEFUNCT PROCESS
 
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serversocket.bind((HOST, PORT))
@@ -50,8 +51,8 @@ def create_server(HOST, PORT, traitant) :
 
 def handler(signum, frame) :
     for pid in fils :
-        os.kill(pid, signal.SIGINT)
-        os.waitpid(pid,0)
+        os.kill(pid, signal.SIGKILL)
+        #os.waitpid(pid,0)
 
 
 if __name__ == "__main__" :
@@ -68,4 +69,4 @@ if __name__ == "__main__" :
 		create_server(ip, port, file)
 	else :
 		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))"""
-	create_server("127.0.0.1", 2002, "traitant2")
+	create_server("127.0.0.1", 2104, "Axel/webshell2")

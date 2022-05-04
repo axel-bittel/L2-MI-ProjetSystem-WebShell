@@ -1,5 +1,6 @@
 import json
 from select import select
+from signal import SIGKILL
 import time 
 import os
 import sys
@@ -13,14 +14,14 @@ Content-Length: 1000
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hello, world!</title>
+    <title>WEB SHELL !!!!</title>
 </head>
-<body style="background-color:black;color:#46C786">
+<body style="background-color:black;color:#00FA16">
 	<h1 style="text-align:center"><strong><u>WEB SHELL</strong></u></h1><br>
-	<h3><u>HISTORY :</u></h3> 
+	<h3><u>HISTORY</u></h3> 
 	$(HISTORY)<br>
-	<h3><u>LAST CMD :</u>$(DATA)</h3><br>
-	<form style="background-color:black;color:#46C786" action="ajoute$(ID_SESSION)" method="get">
+	<h3><u>LAST CMD : </u>$(DATA)</h3><br>
+	<form style="background-color:black;color:#00FA16" action="ajoute$(ID_SESSION)" method="get">
 		<input type="text"  style="border:3px solid #46C786;border-radius:10px;width:200px;box-shadow:1px 1px 2px #C0C0C0 inset;" name="saisie" placeholder="Tapez une commande" />
 		<input type="submit" name="send" value="&#9166;">
 	</form>
@@ -41,21 +42,23 @@ def escaped_latin1_to_utf8(s):
 		i += 1
 	return res
 def read_file (fd) :
+	is_error = False
 	reading = True
-	is_none = False
+	is_none = 0 
 	read = bytes('', "utf8")
 	while (reading) :
 		try :
-			inter = os.read(fd, 100000) 
+			inter = os.read(fd, 4096) 
 			read += inter 
-			if (inter.decode("utf8") == '') :
+			if (is_none > 10) :
 				reading = False
+			elif (inter == b''):
+				is_none += 1 
+				time.sleep(0.2)
 		except :
-			if (is_none) :
+			if (is_error) :
 				reading = False
-			else :
-				is_none = True
-				time.sleep(0.1)
+			is_error = True
 	res =  str(read.decode('utf8'))
 	return (res)
 def get_paquet_type(msg) :
@@ -69,13 +72,13 @@ def get_acceptHTML(msg) :
 def	get_cmd() :
 	id_session = ''
 	msg = os.read(0, 100000) #READ PAQUET
+	os.write(2, msg)
 	if (get_paquet_type(msg) != "GET" or get_paquet_prot(msg) != 'HTTP/1.1') : #IS GOOD PAQUET
 		os.write(2, b"request not supported\n")
 	elif (get_acceptHTML(msg) != 'text/html'):
-		os.close (2)
-		os.close (1)
+		#os.write(2, b"NOT HTML/TEXT SUPPORT\n")
 		os.close (0)
-		exit (0)
+		sys.exit (0)
 	else :
 		#EXTRACT DATA
 		data = ''
@@ -86,6 +89,7 @@ def	get_cmd() :
 			id_session = get_paquet_data(msg).split("?")[0].replace("ajoute", "").replace("/", "")
 		#CHECK IF CMD IS EXIT
 		if (data.split(' ')[0].lower() == 'exit') :
+			os.kill(int(id_session), SIGKILL)
 			id_session = ''
 			data = ''
 	#CREATE RETURN PAQUET
@@ -99,7 +103,7 @@ def	get_cmd() :
 				#PIPES
 				os.mkfifo("/tmp/shell_vers_traitement" + (id_session))
 				os.mkfifo("/tmp/traitement_vers_shell" + (id_session))	
-				os.dup2(os.open("/tmp/traitement_vers_shell" + (id_session), os.O_RDONLY | os.O_NONBLOCK), 0)
+				os.dup2(os.open("/tmp/traitement_vers_shell" + (id_session), os.O_RDONLY), 0)
 				fd_out = os.open("/tmp/shell_vers_traitement" + (id_session), os.O_WRONLY)
 				os.dup2(fd_out, 1)
 				os.dup2(fd_out, 2)
@@ -128,6 +132,7 @@ def	get_cmd() :
 			os.write(fd_history, bytes('\n', 'utf8'))
 			os.write(fd_fifo_out, bytes(data, 'utf8'))
 			os.write(fd_fifo_out, bytes("\n", 'utf8'))
+			time.sleep(0.5)
 		#WRITE RES
 		if (len(data) > 0) :
 			shell_res = read_file(fd_fifo_in)
@@ -139,8 +144,11 @@ def	get_cmd() :
 			os.close (0)
 			os.close (1)
 			os.close (2)
+			os.close (fd_fifo_in)
 			os.waitpid(pid, 0)
 		os.write(1, bytes(msg, 'utf8')) #WRITE PAQUET
+		os.close(0)
+	
 if __name__ == "__main__" :
 	get_cmd()
 	sys.exit (0)
