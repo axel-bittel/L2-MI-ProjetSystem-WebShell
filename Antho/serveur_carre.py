@@ -1,4 +1,4 @@
-import os, select, socket, signal
+import os, select, socket, signal, sys
 
 MAXBYTES = 4096
 fils = []
@@ -56,7 +56,7 @@ def handler(signum, frame) :
 
 
 if __name__ == "__main__" :
-	"""if (len(sys.argv) == 3) :
+	if (len(sys.argv) == 3) :
 		ip = "127.0.0.1"
 		port = sys.argv[2]
 		file = sys.argv[1]
@@ -66,7 +66,7 @@ if __name__ == "__main__" :
 		if (not(os.path.exists(bytes(file + ".py", "utf8")))) :
 			os.write (2, bytes("FILE NOT EXIST\n", "utf8"))
 			exit (1)
-		create_server(ip, port, file)
+		create_server(ip, int(port), file)
 	else :
-		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))"""
-	create_server("127.0.0.1", 2104, "Axel/webshell2")
+		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))
+	#create_server("127.0.0.1", 2105, "Axel/webshell2")

@@ -3,11 +3,13 @@ import os
 import sys
 
 res = """
-HTTP/1.1 200 
+HTTP/1.1 200
 Content-Type: text/html; charset=utf-8
 Connection: close
-Content-Length: 1000
+Content-Length: $(SIZE) 
 
+"""
+res2 = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -52,8 +54,9 @@ def	main() :
 			data = msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")[1].split("&")[0].split("=")[1].replace('+', ' ')
 			data = escaped_latin1_to_utf8(data)
 		#CREATE RETURN PAQUET
-		msg = res.replace("$(DATA)", data)
+		msg = res2.replace("$(DATA)", data)
 		msg = msg.replace("$(HISTORY)", history.replace("\n", "<br>"))
+		msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\n\r') + msg
 		os.write(1, bytes(msg, 'utf8'))
 		#WRITE IN HISTORY
 		if (len(data) > 0) :

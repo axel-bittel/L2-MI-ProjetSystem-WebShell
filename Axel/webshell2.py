@@ -6,11 +6,13 @@ import os
 import sys
 
 res = """
-HTTP/1.1 200 
+HTTP/1.1 200
 Content-Type: text/html; charset=utf-8
 Connection: close
-Content-Length: 1000
+Content-Length: $(SIZE) 
 
+"""
+res2 = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -36,7 +38,7 @@ def escaped_latin1_to_utf8(s):
 	while i < len(s):
 		if s[i] == '%':
 			res += chr(int(s[i+1:i+3], base=16))
-			i += 3
+			i += 2
 		else :
 			res += s[i]
 		i += 1
@@ -50,7 +52,7 @@ def read_file (fd) :
 		try :
 			inter = os.read(fd, 4096) 
 			read += inter 
-			if (is_none > 10) :
+			if (is_none > 1) :
 				reading = False
 			elif (inter == b''):
 				is_none += 1 
@@ -68,15 +70,18 @@ def get_paquet_prot(msg) :
 def get_paquet_data(msg) :
 	return(msg.decode('utf8').split("\r")[0].split(' ')[1])
 def get_acceptHTML(msg) :
-	return (msg.decode('utf8').split('\r')[3].split(' ')[1].split(',')[0])
+	for i in msg.decode('utf8').split('\r') :
+		if i.split(' ')[0].replace("\n", "") == "Accept:" :
+			return (i.split(' ')[1].split(',')[0])
+	return ('')
 def	get_cmd() :
 	id_session = ''
 	msg = os.read(0, 100000) #READ PAQUET
-	os.write(2, msg)
 	if (get_paquet_type(msg) != "GET" or get_paquet_prot(msg) != 'HTTP/1.1') : #IS GOOD PAQUET
 		os.write(2, b"request not supported\n")
 	elif (get_acceptHTML(msg) != 'text/html'):
-		#os.write(2, b"NOT HTML/TEXT SUPPORT\n")
+		#os.write(2, bytes(get_acceptHTML(msg), "utf8"))
+		os.write(2, b"NOT HTML/TEXT SUPPORT\n")
 		os.close (0)
 		sys.exit (0)
 	else :
@@ -93,7 +98,7 @@ def	get_cmd() :
 			id_session = ''
 			data = ''
 	#CREATE RETURN PAQUET
-		msg = res.replace("$(DATA)", data)
+		msg = res2.replace("$(DATA)", data)
 		pid = -1 #PID CHILD
 		if (len(id_session) == 0) :
 			id_session = str(os.getpid())
@@ -140,13 +145,17 @@ def	get_cmd() :
 			os.close (fd_fifo_in)
 			os.close (fd_fifo_out)
 		else : #KEEP PROCESS ALIVE AND WAIT END SH
+			msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\n\r') + msg
 			os.write(1, bytes(msg.replace("$(RES)", ""), 'utf8')) #WRITE PAQUET
 			os.close (0)
 			os.close (1)
 			os.close (2)
 			os.close (fd_fifo_in)
 			os.waitpid(pid, 0)
+			sys.exit(0)
+		msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\n\r') + msg
 		os.write(1, bytes(msg, 'utf8')) #WRITE PAQUET
+		os.write(2, bytes(msg, 'utf8')) #WRITE PAQUET
 		os.close(0)
 	
 if __name__ == "__main__" :
