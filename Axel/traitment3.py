@@ -31,7 +31,7 @@ def escaped_latin1_to_utf8(s):
 	while i < len(s):
 		if s[i] == '%':
 			res += chr(int(s[i+1:i+3], base=16))
-			i += 3
+			i += 2
 		else :
 			res += s[i]
 		i += 1

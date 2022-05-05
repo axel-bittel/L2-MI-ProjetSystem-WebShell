@@ -1,6 +1,6 @@
 import json
 from select import select
-from signal import SIGKILL
+from signal import SIGKILL, SIGUSR1
 import time 
 import os
 import sys
@@ -80,7 +80,6 @@ def	get_cmd() :
 	if (get_paquet_type(msg) != "GET" or get_paquet_prot(msg) != 'HTTP/1.1') : #IS GOOD PAQUET
 		os.write(2, b"request not supported\n")
 	elif (get_acceptHTML(msg) != 'text/html'):
-		#os.write(2, bytes(get_acceptHTML(msg), "utf8"))
 		os.write(2, b"NOT HTML/TEXT SUPPORT\n")
 		os.close (0)
 		sys.exit (0)
@@ -137,25 +136,26 @@ def	get_cmd() :
 			os.write(fd_history, bytes('\n', 'utf8'))
 			os.write(fd_fifo_out, bytes(data, 'utf8'))
 			os.write(fd_fifo_out, bytes("\n", 'utf8'))
-			time.sleep(0.5)
-		#WRITE RES
+			time.sleep(0.5) #LET THE TIME TO WRITE AND PROCESS 
+		#WRITE RES CMD
 		if (len(data) > 0) :
 			shell_res = read_file(fd_fifo_in)
 			msg = msg.replace("$(RES)" ,shell_res.replace("\n", "<br>"))
 			os.close (fd_fifo_in)
 			os.close (fd_fifo_out)
 		else : #KEEP PROCESS ALIVE AND WAIT END SH
-			msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\n\r') + msg
+			msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\r\n') + msg
 			os.write(1, bytes(msg.replace("$(RES)", ""), 'utf8')) #WRITE PAQUET
-			os.close (0)
-			os.close (1)
-			os.close (2)
-			os.close (fd_fifo_in)
-			os.waitpid(pid, 0)
-			sys.exit(0)
-		msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\n\r') + msg
+			time.sleep(0.2) #LET THE TIME TO WRITE
+			os.close(0)
+			os.close(1) #CLOSE IN/OUT SOCKET 
+			os.kill(os.getppid(), SIGUSR1) #SIG TO SAY THE END OF THIS PROCESS TO SERVER 
+			try :
+				os.waitpid(pid, 0) #STAY ALIVE FOR THE SH PROCESS
+			except :
+				sys.exit(0)
+		msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\r\n') + msg
 		os.write(1, bytes(msg, 'utf8')) #WRITE PAQUET
-		os.write(2, bytes(msg, 'utf8')) #WRITE PAQUET
 		os.close(0)
 	
 if __name__ == "__main__" :

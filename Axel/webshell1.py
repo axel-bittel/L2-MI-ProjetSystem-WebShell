@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import time
 
 res = """
 HTTP/1.1 200
@@ -22,6 +23,7 @@ res2 = """
 		<input type="text" name="saisie" placeholder="Tapez quelque chose" />
 		<input type="submit" name="send" value="&#9166;">
 	</form>
+	$(RES)<br>
 </body>
 </html>
 """ 
@@ -64,6 +66,17 @@ def	get_cmd() :
 			history += read.decode('utf8')
 			read = os.read(fd, 100000)
 		msg = msg.replace("$(HISTORY)", history.replace("\n", "<br>"))
+		pid_fork = os.fork()
+		if (pid_fork == 0) :
+			os.unlink("/tmp/res_cmd")
+			fd_res = os.open("/tmp/res_cmd", os.O_RDWR | os.O_CREAT)
+			os.dup2(fd_res, 1)
+			os.dup2(fd_res, 2)
+			os.execvp('sh', ['sh','-c', data])
+		else :
+			time.sleep(0.5)
+			res_cmd = os.read(os.open("/tmp/res_cmd", os.O_RDONLY), 1000000)
+			msg = msg.replace("$(RES)", res_cmd.decode("utf8").replace("\n", "<br>"))
 		msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\n\r') + msg
 		os.write(1, bytes(msg, 'utf8'))
 		#WRITE IN HISTORY
@@ -75,4 +88,3 @@ def	get_cmd() :
 	exit (0)
 if __name__ == "__main__" :
 	data, history = get_cmd()
-	os.execvp('sh', ['sh','-c', data] )

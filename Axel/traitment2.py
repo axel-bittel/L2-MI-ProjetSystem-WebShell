@@ -29,7 +29,6 @@ def	main() :
 		inter = msg.decode('utf8')
 		msg = res2.replace("$(RES)", msg.decode('utf8').replace("\n", "<br>"))
 		msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\n\r') + msg
-		os.write(2, bytes(msg, 'utf8'))
 		os.write(1, bytes(msg, 'utf8'))
 	exit (0)
 if __name__ == "__main__" :
