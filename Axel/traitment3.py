@@ -25,17 +25,16 @@ res2 = """
 </body>
 </html>
 """ 
-def escaped_latin1_to_utf8(s):
-	res = ''
-	i = 0
-	while i < len(s):
-		if s[i] == '%':
-			res += chr(int(s[i+1:i+3], base=16))
-			i += 2
-		else :
-			res += s[i]
-		i += 1
-	return res
+def escaped_utf8_to_utf8(s):
+    res = b'' ; i = 0
+    while i < len(s):
+        if s[i] == '%':
+            res += int(s[i+1:i+3], base=16).to_bytes(1, byteorder='big')
+            i += 3
+        else :
+            res += bytes(s[i], "utf8")
+            i += 1
+    return res.decode('utf-8')
 
 def	main() :
 	msg = os.read(0, 100000)
@@ -47,7 +46,7 @@ def	main() :
 		if (len(msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")) > 1) :
 			data = msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")[1].split("&")[0].split("=")[1].replace('+', ' ')
 		msg = res2.replace("$(RES)", msg.decode('utf8').replace("\n", "<br>"))
-		msg = msg.replace("$(DATA)", escaped_latin1_to_utf8(data))
+		msg = msg.replace("$(DATA)", escaped_utf8_to_utf8(data))
 		msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\n\r') + msg
 		os.write(2, bytes(msg, 'utf8'))
 		os.write(1, bytes(msg, 'utf8'))

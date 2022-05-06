@@ -17,19 +17,14 @@ res2 = """
 <html>
 <head>
     <title>WEB SHELL !!!!</title>
-	<script language="javascript">
-		var input = document.getElementById('textbox');
-		input.focus();
-		input.select();
-	</script> 	
 </head>
 <body style="background-color:black;color:#00FA16">
-	<h1 style="text-align:center"></u><strong>WEB SHELL</strong></u></h1><br>
+	<h1 style="text-align:center"><strong><u>WEB SHELL</u></strong></h1><br>
 	<h3><u>HISTORY</u></h3> 
 	$(HISTORY)<br>
 	<h3><u>LAST CMD :</u> $(DATA)</h3><br>
-	<form style="background-color:black;color:#00FA16" action="ajoute$(ID_SESSION)" method="get">
-		<input id="textbox" type="text"  style="border:3px solid #46C786;border-radius:10px;width:200px;box-shadow:1px 1px 2px #C0C0C0 inset;" name="saisie" placeholder="Tapez une commande" />
+	<form style="background-color:black;color:#00FA16" action="ajoute$(ID_SESSION)$(IS_STDIN)" method="get">
+		<input id="textbox" type="text"  style="border:3px solid #46C786;border-radius:10px;width:200px;box-shadow:1px 1px 2px #C0C0C0 inset;" name="saisie" placeholder="$(TEXT_BOX)" />
 		<input type="submit" name="send" value="&#9166;">
 	</form>
 	<h3><u>RES CMD :</u></h3> 
@@ -42,6 +37,7 @@ res2 = """
 </script> 	
 </html>
 """ 
+is_stdin = 0
 def escaped_utf8_to_utf8(s):
     res = b'' ; i = 0
     while i < len(s):
@@ -53,24 +49,27 @@ def escaped_utf8_to_utf8(s):
             i += 1
     return res.decode('utf-8')
 
-def read_file (fd) :
+def read_file (fd, change_stdin = 0) :
 	is_error = False
 	reading = True
 	is_none = 0 
+	global is_stdin
 	read = bytes('', "utf8")
 	while (reading) :
 		try :
 			inter = os.read(fd, 4096) 
 			read += inter 
-			if (inter[-1] == 10) : #end cmd
+			if (inter[-1] == 10 and inter[0] != 10) :
 				reading = False
-			elif (is_none > 3) :
+			elif (is_none > 1) :
 				reading = False
-			elif (inter == b''):
+			elif (inter == b'\10'):
 				is_none += 1 
-				time.sleep(0.2)
+				time.sleep(1)
 		except :
 			if (is_error) :
+				if (change_stdin == 1) :
+					is_stdin = 1
 				reading = False
 			is_error = True
 	res =  str(read.decode('utf8'))
@@ -87,6 +86,7 @@ def get_acceptHTML(msg) :
 			return (i.split(' ')[1].split(',')[0])
 	return ('')
 def	get_cmd() :
+	global is_stdin
 	id_session = ''
 	msg = os.read(0, 100000) #READ PAQUET
 	if (get_paquet_type(msg) != "GET" or get_paquet_prot(msg) != 'HTTP/1.1') : #IS GOOD PAQUET
@@ -102,7 +102,8 @@ def	get_cmd() :
 			data = get_paquet_data(msg).split("?")[1].split("&")[0].split("=")[1].replace('+', ' ')
 			data = escaped_utf8_to_utf8(data)
 		if (len(get_paquet_data(msg).split("?")) > 1) :
-			id_session = get_paquet_data(msg).split("?")[0].replace("ajoute", "").replace("/", "")
+			id_session = get_paquet_data(msg).split("?")[0].replace("ajoute", "").replace("/", "")[:-1]
+			is_stdin = int(get_paquet_data(msg).split("?")[0].replace("ajoute", "").replace("/", "")[-1])
 		#CHECK IF CMD IS EXIT
 		if (data.split(' ')[0].lower() == 'exit') :
 			os.kill(int(id_session), SIGKILL)
@@ -144,18 +145,30 @@ def	get_cmd() :
 		msg = msg.replace("$(HISTORY)", history.replace("\n", "<br>"))
 		#WRITE IN HISTORY FILE AND IN PIPE TO SHELL
 		if (len(data) > 0) :
-			os.write(fd_history, bytes(data,'utf8'))
-			os.write(fd_history, bytes('\n', 'utf8'))
-			os.write(fd_fifo_out, bytes(data, 'utf8'))
-			os.write(fd_fifo_out, bytes("\n", 'utf8'))
+			os.write(fd_history, bytes(data + "\n",'utf8'))
+			os.write(fd_fifo_out, bytes(data + "\n", 'utf8'))
+			if (is_stdin == 1) :
+				os.write(fd_fifo_out, b"\04")
 			time.sleep(0.1) #LET THE TIME TO WRITE AND PROCESS 
 		#WRITE RES CMD
 		if (len(data) > 0) :
-			shell_res = read_file(fd_fifo_in)
+			shell_res = ''
+			if (is_stdin == 0) :
+				shell_res = read_file(fd_fifo_in, 1)
+			else :
+				shell_res = read_file(fd_fifo_in, 0)
+				is_stdin = 0
 			msg = msg.replace("$(RES)" ,shell_res.replace("\n", "<br>"))
+			msg = msg.replace("$(IS_STDIN)", str(is_stdin))
+			if (is_stdin == 0) :
+				msg = msg.replace("$(TEXT_BOX)", "Tapez une commande")
+			else :
+				msg = msg.replace("$(TEXT_BOX)", "Entree Standard")
 			os.close (fd_fifo_in)
 			os.close (fd_fifo_out)
 		else : #KEEP PROCESS ALIVE AND WAIT END SH
+			msg = msg.replace("$(IS_STDIN)", "0")
+			msg = msg.replace("$(TEXT_BOX)", "Tapez une commande")
 			msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\r\n') + msg
 			os.write(1, bytes(msg.replace("$(RES)", ""), 'utf8')) #WRITE PAQUET
 			time.sleep(0.1) #LET THE TIME TO WRITE

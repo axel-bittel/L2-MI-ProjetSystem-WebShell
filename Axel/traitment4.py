@@ -25,17 +25,16 @@ res2 = """
 </body>
 </html>
 """ 
-def escaped_latin1_to_utf8(s):
-	res = ''
-	i = 0
-	while i < len(s):
-		if s[i] == '%':
-			res += chr(int(s[i+1:i+3], base=16))
-			i += 2
-		else :
-			res += s[i]
-		i += 1
-	return res
+def escaped_utf8_to_utf8(s):
+    res = b'' ; i = 0
+    while i < len(s):
+        if s[i] == '%':
+            res += int(s[i+1:i+3], base=16).to_bytes(1, byteorder='big')
+            i += 3
+        else :
+            res += bytes(s[i], "utf8")
+            i += 1
+    return res.decode('utf-8')
 
 def	main() :
 	fd = os.open("/tmp/historique.txt", os.O_CREAT | os.O_APPEND | os.O_RDWR)
@@ -43,16 +42,20 @@ def	main() :
 	if (msg.decode('utf8').split("\r")[0].split(' ')[0] != "GET" or msg.decode('utf8').split('\r')[0].split(' ')[2] != 'HTTP/1.1') :
 		os.write(2, b"request not supported\n")
 	else :
+				#EXTRACT DATA
+		data = ''
+		if (len(msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")) > 1) :
+			data = msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")[1].split("&")[0].split("=")[1].replace('+', ' ')
+			data = escaped_utf8_to_utf8(data)
+		else :
+			os.unlink("/tmp/historique.txt")
+			fd = os.open("/tmp/historique.txt", os.O_CREAT | os.O_APPEND | os.O_RDWR)
+		#READ HISTORY
 		read = os.read(fd, 100000)
 		history =  ''
 		while (len(read) > 0) :
 			history += read.decode('utf8')
 			read = os.read(fd, 100000)
-		#EXTRACT DATA
-		data = ''
-		if (len(msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")) > 1) :
-			data = msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")[1].split("&")[0].split("=")[1].replace('+', ' ')
-			data = escaped_latin1_to_utf8(data)
 		#CREATE RETURN PAQUET
 		msg = res2.replace("$(DATA)", data)
 		msg = msg.replace("$(HISTORY)", history.replace("\n", "<br>"))

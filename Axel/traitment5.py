@@ -25,17 +25,16 @@ res2 = """
 </body>
 </html>
 """ 
-def escaped_latin1_to_utf8(s):
-	res = ''
-	i = 0
-	while i < len(s):
-		if s[i] == '%':
-			res += chr(int(s[i+1:i+3], base=16))
-			i += 2
-		else :
-			res += s[i]
-		i += 1
-	return res
+def escaped_utf8_to_utf8(s):
+    res = b'' ; i = 0
+    while i < len(s):
+        if s[i] == '%':
+            res += int(s[i+1:i+3], base=16).to_bytes(1, byteorder='big')
+            i += 3
+        else :
+            res += bytes(s[i], "utf8")
+            i += 1
+    return res.decode('utf-8')
 
 def	main() :
 	id_session = ''
@@ -48,7 +47,7 @@ def	main() :
 		data = ''
 		if (len(msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")) > 1) :
 			data = msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")[1].split("&")[0].split("=")[1].replace('+', ' ')
-			data = escaped_latin1_to_utf8(data)
+			data = escaped_utf8_to_utf8(data)
 		if (len(msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")) > 1) :
 			id_session = msg.decode('utf8').split("\r")[0].split(' ')[1].split("?")[0].replace("ajoute", "").replace("/", "")
 		#CREATE RETURN PAQUET

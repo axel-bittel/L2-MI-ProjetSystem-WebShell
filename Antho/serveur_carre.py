@@ -1,4 +1,4 @@
-#/bin/python3
+#!/usr/bin/python3
 import os, select, socket, signal, sys
 
 MAXBYTES = 4096
@@ -87,4 +87,4 @@ if __name__ == "__main__" :
 		create_server(ip, int(port), file)
 	else :
 		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))
-	#create_server("127.0.0.1", 4005, "cat")
+	#create_server("127.0.0.1", 4002, "Axel/webshell3.py")
