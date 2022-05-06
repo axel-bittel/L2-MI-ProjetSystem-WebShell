@@ -16,7 +16,7 @@ res2 = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WEB SHELL !!!!</title>
+    <title>WEB SHELL 3</title>
 </head>
 <body style="background-color:black;color:#00FA16">
 	<h1 style="text-align:center"><strong><u>WEB SHELL</u></strong></h1><br>

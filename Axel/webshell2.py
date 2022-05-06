@@ -16,12 +16,7 @@ res2 = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WEB SHELL !!!!</title>
-	<script language="javascript">
-		var input = document.getElementById('textbox');
-		input.focus();
-		input.select();
-	</script> 	
+    <title>WEB SHELL 2</title>
 </head>
 <body style="background-color:black;color:#00FA16">
 	<h1 style="text-align:center"></u><strong>WEB SHELL</strong></u></h1><br>

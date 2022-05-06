@@ -62,6 +62,7 @@ def create_server(HOST, PORT, traitant) :
                     s.close()
                     socketlist.remove(s)		
     serversocket.close()
+    handler(0,0)
 
 def handler(signum, frame) :
     for pid in fils :
@@ -87,4 +88,3 @@ if __name__ == "__main__" :
 		create_server(ip, int(port), file)
 	else :
 		os.write (2, bytes("NOT ENOUGH ARUMENTS\n", "utf8"))
-	#create_server("127.0.0.1", 4002, "Axel/webshell3.py")
