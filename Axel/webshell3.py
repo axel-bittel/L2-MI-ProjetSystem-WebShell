@@ -145,7 +145,7 @@ def	get_cmd() :
 		msg = msg.replace("$(HISTORY)", history.replace("\n", "<br>"))
 		#WRITE IN HISTORY FILE AND IN PIPE TO SHELL
 		if (len(data) > 0) :
-			os.write(fd_history, bytes(data + "\n",'utf8'))
+			os.write(fd_history, bytes("<font color='orange'>" + time.strftime("%d/%m/%Y %H:%M:%S") + "$</font> " + data + '\n','utf8'))
 			os.write(fd_fifo_out, bytes(data + "\n", 'utf8'))
 			if (is_stdin == 1) :
 				os.write(fd_fifo_out, b"\04")
@@ -164,6 +164,7 @@ def	get_cmd() :
 				msg = msg.replace("$(TEXT_BOX)", "Tapez une commande")
 			else :
 				msg = msg.replace("$(TEXT_BOX)", "Entree Standard")
+			os.write(fd_history, bytes(shell_res, 'utf8'))
 			os.close (fd_fifo_in)
 			os.close (fd_fifo_out)
 		else : #KEEP PROCESS ALIVE AND WAIT END SH

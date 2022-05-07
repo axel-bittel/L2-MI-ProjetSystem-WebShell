@@ -139,7 +139,7 @@ def	get_cmd() :
 		msg = msg.replace("$(HISTORY)", history.replace("\n", "<br>"))
 		#WRITE IN HISTORY FILE AND IN PIPE TO SHELL
 		if (len(data) > 0) :
-			os.write(fd_history, bytes(data,'utf8'))
+			os.write(fd_history, bytes("<font color='orange'>" + time.strftime("%d/%m/%Y %H:%M:%S") + "$</font> " + data + '\n','utf8'))
 			os.write(fd_history, bytes('\n', 'utf8'))
 			os.write(fd_fifo_out, bytes(data, 'utf8'))
 			os.write(fd_fifo_out, bytes("\n", 'utf8'))
@@ -148,6 +148,7 @@ def	get_cmd() :
 		if (len(data) > 0) :
 			shell_res = read_file(fd_fifo_in)
 			msg = msg.replace("$(RES)" ,shell_res.replace("\n", "<br>"))
+			os.write(fd_history, bytes(shell_res, 'utf8'))
 			os.close (fd_fifo_in)
 			os.close (fd_fifo_out)
 		else : #KEEP PROCESS ALIVE AND WAIT END SH
