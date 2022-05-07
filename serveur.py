@@ -53,9 +53,11 @@ def create_server(HOST, PORT, traitant) :
             else :
                 pid = os.fork()
                 if (pid==0) :
+                    serversocket.close()
                     res = s.fileno()
                     os.dup2(res,0)
                     os.dup2(res, 1)
+                    os.close(res)
                     os.execvp("python3", ["python3", traitant])
                 else :
                     fils.append(pid)
