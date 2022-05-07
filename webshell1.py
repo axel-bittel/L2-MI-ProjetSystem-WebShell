@@ -30,9 +30,9 @@ res2 = """
 	$(RES)
 </body>
 <script language="javascript">
-	var input = document.getElementById('textbox');
-	input.focus();
-	input.select();
+	var box_input = document.getElementById('textbox');
+	box_input.focus();
+	box_input.select();
 </script> 	
 </html>
 """ 
